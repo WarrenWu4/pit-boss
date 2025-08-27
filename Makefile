@@ -1,10 +1,10 @@
-CXX=g++
-CXXFLAGS=-Wall -std=c++17 -Iinclude
-EXE=pitboss.exe
-SRC_DIR=src
-BUILD_DIR=build
-SRC=$(wildcard $(SRC_DIR)/*.cpp)
-OBJ=$(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o, $(SRC))
+CXX = g++
+CXXFLAGS = -Wall -std=c++17 -Iinclude
+WINFLAGS = -mwindows -municode
+LIBFLAGS = -lsetupapi
+SRC = $(wildcard src/*.cpp)
+BUILD_DIR = build
+EXE = pitboss.exe
 
 # entry point
 all: $(BUILD_DIR) $(EXE)
@@ -13,20 +13,17 @@ all: $(BUILD_DIR) $(EXE)
 $(BUILD_DIR):
 	powershell -Command "if (!(Test-Path '$(BUILD_DIR)')) { New-Item -ItemType Directory -Path '$(BUILD_DIR)' }"
 
-# link object files
-$(EXE): $(OBJ)
-	$(CXX) $^ -o $(BUILD_DIR)/$(EXE)
-
-# build object files
-$(OBJ): $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+# just recompile everything
+# don't give a shit anymore
+$(EXE): $(SRC)
+	$(CXX) $(SRC) $(CXXFLAGS) $(WINFLAGS) $(LIBFLAGS) -o $(BUILD_DIR)/$(EXE)
 
 # remove build artifacts
 clean:
 	powershell -Command "if (Test-Path '$(BUILD_DIR)') { Remove-Item -Recurse -Force '$(BUILD_DIR)' }"
 
 # run the executable
-run: $(EXE)
+run: $(BUILD_DIR) $(EXE)
 	./$(BUILD_DIR)/$(EXE)
 
 .PHONY: all run clean

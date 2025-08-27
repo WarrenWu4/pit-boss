@@ -50,8 +50,7 @@ int DesktopManager::getCurrentDesktop() const {
     return GetCurrentDesktopNumber();
 }
 
-bool DesktopManager::switchToDesktop(int index) const {
-    if (!loaded) return false;
-    GoToDesktopNumber(index);
-    return true;
+int DesktopManager::switchToDesktop(int index) const {
+    if (!loaded) return -1;
+    return GoToDesktopNumber(index);
 }
