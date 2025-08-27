@@ -33,10 +33,6 @@ WIP
 
 WIP
 
----
+**PS:** Normal for backgrounds AND layouts to fuck up a little bit when switching desktops (you can thank Microsoft for that 🙃).
 
----
-
-**PS:** Normal for backgrounds to fuck up a little bit when switching desktops (you can thank Microsoft for that 🙃).
-
-**PSS:** Haven't tested on multiple keyboard inputs, so if you have multiple keyboards attached might not work properly (my bad 🙂).
+**PSS:** Haven't tested on multiple keyboard inputs, so if you have multiple keyboards attached might not work properly (this one is my bad 🙂).
