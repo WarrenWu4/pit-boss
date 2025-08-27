@@ -1,11 +1,20 @@
 # Pit Boss
 
-Built on top of Ciantic/VirtualDesktopAccessor
+A hotkey manager for virtual desktops in Windows 11.
 
-- Provides a more friendly GUI for key mapping
-- Runs on start up
+Built on top of Ciantic/VirtualDesktopAccessor.
 
+## Features
 
-Misc Notes
-Normal for backgrounds to fuck up a little bit when switching desktops. You can blame Microsoft for that :).
-Until I create my own of virtual desktops on windows it'll be a little laggy. You can blame Microsoft for that again :).
+WIP
+- Switch between desktops.
+- Move applications from one desktop to another.
+- Friendly GUI for key mappings.
+- Dynamic tray icon that displaying current desktop.
+- Runs on device start up.
+
+## Download 
+
+WIP
+
+**PS:** Normal for backgrounds to fuck up a little bit when switching desktops (you can thank Microsoft for that 🙃).
