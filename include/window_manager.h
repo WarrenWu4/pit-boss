@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <string>
 #include <vector>
+#include "logger.h"
 
 // very simple manager
 // primarily used to resize windows
@@ -23,6 +24,7 @@ private:
     static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
     BOOL ProcessWindow(HWND hwnd);
     HICON GetWindowIcon(HWND hwnd);
+    Logger logger;
 public:
     WindowManager();
     ~WindowManager();

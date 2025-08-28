@@ -1,6 +1,7 @@
 #pragma once
 #include <windows.h>
 #include <string>
+#include "logger.h"
 
 class TopBar {
 public:
@@ -20,4 +21,6 @@ private:
     int barHeight = 20;
     bool isVisible = true;
     RECT originalWorkArea;
+
+    Logger logger;
 };

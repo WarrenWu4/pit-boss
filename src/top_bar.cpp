@@ -5,7 +5,7 @@
 #define TOP_BAR_CLASS L"PitBossTopBarClass"
 #define TOP_BAR_TITLE L""
     
-TopBar::TopBar(HINSTANCE hInstance) : hInstance_(hInstance) {
+TopBar::TopBar(HINSTANCE hInstance) : hInstance_(hInstance), logger(L"build/error.log") {
     // stores original work area
     SystemParametersInfo(SPI_GETWORKAREA, 0, &originalWorkArea, 0);
 }
@@ -65,6 +65,32 @@ LRESULT TopBar::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(hFont);
             EndPaint(hwnd_, &ps);
         }
+        case WM_SIZE: {
+            UpdateWorkArea();
+            InvalidateRect(hwnd_, NULL, TRUE);
+            return 0;
+        }
+        case WM_DISPLAYCHANGE: {
+            if (!hwnd_) { return 0; }
+            int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+            SetWindowPos(hwnd_, HWND_TOPMOST, 0, 0, screenWidth, barHeight,
+                         SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            UpdateWorkArea();
+            return 0;
+        }
+        case WM_SETTINGCHANGE: {
+            if (lParam && lstrcmp((LPCTSTR)lParam, L"WorkArea") == 0) {
+                if (!hwnd_)
+                {
+                    return 0;
+                }
+                int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+                SetWindowPos(hwnd_, HWND_TOPMOST, 0, 0, screenWidth, barHeight,
+                             SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                UpdateWorkArea();
+            }
+            return 0;
+        }
         default: {
             return DefWindowProc(hwnd_, uMsg, wParam, lParam);
         }
@@ -115,14 +141,17 @@ bool TopBar::Initialize() {
 
 void TopBar::UpdateWorkArea() {
     if (!isVisible) { return; }
+    logger.LogMessageToFile(L"Updating work area");
     RECT workArea;
     SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
     workArea.top = barHeight;
+    workArea.bottom -= 100;
     SystemParametersInfo(SPI_SETWORKAREA, 0, &workArea, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 
 }
 
 void TopBar::RestoreWorkArea() {
+    logger.LogMessageToFile(L"Restoring original work area");
     SystemParametersInfo(SPI_SETWORKAREA, 0, &originalWorkArea, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 }
 

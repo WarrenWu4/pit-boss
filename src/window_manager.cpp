@@ -56,7 +56,7 @@ HICON WindowManager::GetWindowIcon(HWND hwnd)
     return icon;
 }
 
-WindowManager::WindowManager() {}
+WindowManager::WindowManager(): logger(L"build/error.log") {}
 
 WindowManager::~WindowManager() {}
 
@@ -82,7 +82,6 @@ bool WindowManager::FocusAndResizeWindow(HWND hwnd)
     {
         ShowWindow(hwnd, SW_RESTORE);
     }
-    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
     // Calculate available workspace (accounting for top bar)
@@ -147,7 +146,7 @@ bool WindowManager::FocusAndResizeWindow(HWND hwnd)
 void WindowManager::ResizeAllWindowsToWorkspace()
 {
     RefreshWindows();
-    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    logger.LogMessageToFile(L"There are currently " + std::to_wstring(windows.size()) + L" windows open.");
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
     int workspaceTop = topBarHeight;
     int workspaceHeight = screenHeight - topBarHeight;
@@ -159,12 +158,16 @@ void WindowManager::ResizeAllWindowsToWorkspace()
             continue;
         }
         // Skip maximized windows - they'll be handled by work area
+        // ^ this was a fucking lie, it is NOT handled by work area
+        // current solution: force refresh
         WINDOWPLACEMENT wp = {sizeof(WINDOWPLACEMENT)};
         GetWindowPlacement(window.handle, &wp);
         if (wp.showCmd == SW_SHOWMAXIMIZED)
         {
+            logger.LogMessageToFile(L"Skipping maximized window: " + window.title);
             continue;
         }
+        logger.LogMessageToFile(L"Changing window size: " + window.title);
         RECT rect;
         GetWindowRect(window.handle, &rect);
         bool needsResize = false;
@@ -187,7 +190,6 @@ void WindowManager::ResizeAllWindowsToWorkspace()
             }
             needsResize = true;
         }
-
         if (needsResize)
         {
             SetWindowPos(window.handle, HWND_TOP,
