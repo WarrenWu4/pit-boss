@@ -3,11 +3,12 @@
 #include <shlobj.h>
 
 #define SETTINGS_WINDOW_CLASS L"PitBossSettingsWindowClass"
-#define SETTINGS_WINDOW_TITLE L"Pit Boss Settings"
+#define SETTINGS_WINDOW_TITLE L"Settings"
 
 SettingsWindow::SettingsWindow(HINSTANCE hInstance) : hInstance_(hInstance) {}
+
 SettingsWindow::~SettingsWindow() {
-    if (hwnd_) DestroyWindow(hwnd_);
+    if (hwnd_) { DestroyWindow(hwnd_); }
 }
 
 void SettingsWindow::Show(HWND parent) {
@@ -53,15 +54,4 @@ std::wstring SettingsWindow::GetConfigPath() {
     std::wstring configPath = path;
     configPath += L"\\pitboss_config.txt";
     return configPath;
-}
-
-void SettingsWindow::SaveConfig(const std::wstring& configData) {
-    std::wofstream ofs(GetConfigPath());
-    ofs << configData;
-}
-
-std::wstring SettingsWindow::LoadConfig() {
-    std::wifstream ifs(GetConfigPath());
-    std::wstring data((std::istreambuf_iterator<wchar_t>(ifs)), std::istreambuf_iterator<wchar_t>());
-    return data;
 }

@@ -75,7 +75,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 cleanup();
                 return 0;
             } else if (LOWORD(wParam) == ID_TRAY_SETTINGS) {
-                if (settingsWindow) settingsWindow->Show(hwnd);
+                if (settingsWindow) {
+                    settingsWindow->Show(hwnd);
+                }
                 return 0;
             }
             break;
@@ -89,6 +91,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
+    // TODO: change the timing for when settings window is created
+    // create settings window when the settings button is clicked
+    // this way it will save both time and memory
     settingsWindow = new SettingsWindow(hInstance);
     // make sure desktop manager functions are loaded
     if (!desktopManager.isLoaded()) {

@@ -8,8 +8,6 @@ public:
     ~SettingsWindow();
     void Show(HWND parent);
     static std::wstring GetConfigPath();
-    static void SaveConfig(const std::wstring& configData);
-    static std::wstring LoadConfig();
 private:
     HWND hwnd_ = nullptr;
     HINSTANCE hInstance_;
