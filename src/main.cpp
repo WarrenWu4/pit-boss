@@ -5,6 +5,8 @@
 #include "desktop_manager.h"
 #include "logger.h"
 #include "settings_window.h"
+#include "top_bar.h"
+#include "window_manager.h"
 #include <iostream>
 #include <windows.h>
 #include <cassert>
@@ -15,6 +17,7 @@
 NOTIFYICONDATA nid = {};
 HMENU hTrayMenu = NULL;
 SettingsWindow* settingsWindow = nullptr;
+TopBar* topBar = nullptr;
 HICON hIcon = NULL;
 
 HHOOK g_hHook = NULL;
@@ -30,6 +33,10 @@ void cleanup() {
     if (settingsWindow) {
         delete settingsWindow;
         settingsWindow = nullptr;
+    }
+    if (topBar) {
+        delete topBar;
+        topBar = nullptr;
     }
 }
 
@@ -95,6 +102,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     // create settings window when the settings button is clicked
     // this way it will save both time and memory
     settingsWindow = new SettingsWindow(hInstance);
+    topBar = new TopBar(hInstance);
+    if (!topBar->Initialize()) {
+        errorLog.LogMessageToFile(L"Failed to initialize TopBar");
+        return 1;
+    }
+    WindowManager wm;
+    wm.RefreshWindows();
+    wm.ResizeAllWindowsToWorkspace();
     // make sure desktop manager functions are loaded
     if (!desktopManager.isLoaded()) {
         errorLog.LogMessageToFile(L"Failed to load VirtualDesktopAccessor.dll");
