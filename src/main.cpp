@@ -4,6 +4,7 @@
 
 #include "desktop_manager.h"
 #include "logger.h"
+#include "settings_window.h"
 #include <iostream>
 #include <windows.h>
 #include <cassert>
@@ -13,6 +14,7 @@
 #define ID_TRAY_EXIT 1001
 NOTIFYICONDATA nid = {};
 HMENU hTrayMenu = NULL;
+SettingsWindow* settingsWindow = nullptr;
 HICON hIcon = NULL;
 
 HHOOK g_hHook = NULL;
@@ -25,6 +27,10 @@ void cleanup() {
     DestroyMenu(hTrayMenu);
     DestroyIcon(hIcon);
     PostQuitMessage(0);
+    if (settingsWindow) {
+        delete settingsWindow;
+        settingsWindow = nullptr;
+    }
 }
 
 void hotKeyHandler(int number) {
@@ -69,6 +75,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 cleanup();
                 return 0;
             } else if (LOWORD(wParam) == ID_TRAY_SETTINGS) {
+                if (settingsWindow) settingsWindow->Show(hwnd);
                 return 0;
             }
             break;
@@ -82,6 +89,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
+    settingsWindow = new SettingsWindow(hInstance);
     // make sure desktop manager functions are loaded
     if (!desktopManager.isLoaded()) {
         errorLog.LogMessageToFile(L"Failed to load VirtualDesktopAccessor.dll");

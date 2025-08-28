@@ -10,9 +10,8 @@ WIP
 - Switch between desktops.
 - Move applications from one desktop to another.
 - Friendly GUI for key mappings.
-- Dynamic tray icon that displaying current desktop.
 - Runs on device start up.
-- Optional top navigation bar
+- Optional top navigation bar for displaying desktops.
 
 ## How To Use
 
