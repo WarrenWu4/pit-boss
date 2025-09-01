@@ -30,7 +30,27 @@ DesktopWindow::DesktopWindow(HINSTANCE hInstance) : hInstance(hInstance) {
 
     // closeIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CLOSE_ICON));
 
-    desktopNames = { L"Testing", L"testing2" };
+    // font stuff
+    HRSRC hRes = FindResource(hInstance, MAKEINTRESOURCE(IDR_JBM_FONT_BOLD), RT_FONT);
+    HGLOBAL hMem = LoadResource(hInstance, hRes);
+    void* pFontData = LockResource(hMem);
+    DWORD fontSize = SizeofResource(hInstance, hRes);
+    DWORD nFonts = 0;
+    hFontRes = AddFontMemResourceEx(pFontData, fontSize, NULL, &nFonts);
+    HDC hdc = GetDC(hwnd);
+    int logPixelsY = GetDeviceCaps(hdc, LOGPIXELSY);
+    ReleaseDC(hwnd, hdc);
+    int fontHeight = -MulDiv(10, logPixelsY, 72);
+    hFont = CreateFont(
+        fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+        DEFAULT_PITCH | FF_MODERN, L"JetBrains Mono"
+    );
+
+    desktopNames = { L"dummy thic", L"yayayay" };
+    for (size_t i = 0; i < desktopNames.size(); i++) {
+        desktopNames[i] = std::to_wstring(i + 1) + L"." + desktopNames[i];
+    }
     currentDesktopIndex = 0;
     CalculateLayout(desktopNames);
 }
@@ -38,6 +58,14 @@ DesktopWindow::DesktopWindow(HINSTANCE hInstance) : hInstance(hInstance) {
 DesktopWindow::~DesktopWindow() {
     if (hwnd) {
         DestroyWindow(hwnd);
+    }
+    if (hFont) {
+        DeleteObject(hFont);
+        hFont = nullptr;
+    }
+    if (hFontRes) {
+        RemoveFontMemResourceEx(hFontRes);
+        hFontRes = nullptr;
     }
 }
 
@@ -53,10 +81,11 @@ void DesktopWindow::CalculateLayout(std::vector<std::wstring> desktops) {
     };
     // calculate desktop rects
     int currentX = closeRect.right + gap;
+    HDC hdc = GetDC(hwnd);
+    HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
     for (size_t i = 0; i < desktops.size(); i++) {
         const std::wstring& name = desktops.at(i);
         SIZE size;
-        HDC hdc = GetDC(hwnd);
         GetTextExtentPoint32(hdc, name.c_str(), name.length(), &size);
         RECT desktopRect = {
             currentX,
@@ -67,6 +96,8 @@ void DesktopWindow::CalculateLayout(std::vector<std::wstring> desktops) {
         desktopRects.push_back(desktopRect); 
         currentX += size.cx + 2 * textPadding.x + gap;
     }
+    SelectObject(hdc, oldFont);
+    ReleaseDC(hwnd, hdc);
     // calculate draggable rect
     dragRect = {
         currentX,
@@ -95,21 +126,23 @@ void DesktopWindow::DrawDesktopNames(HDC hdc) {
     // set text parameters
     SetTextColor(hdc, RGB(135, 141, 164));
     SetBkMode(hdc, TRANSPARENT);
+    HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
+    HBRUSH brush = CreateSolidBrush(RGB(30, 30, 46));
+    HPEN pen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
+    HPEN oldPen = (HPEN)SelectObject(hdc, pen);
     // iterate through desktop names and draw each
     for (size_t i = 0; i < desktopRects.size(); i++) {
         const std::wstring& name = desktopNames[i];
         RECT rect = desktopRects[i];
-        HBRUSH brush = CreateSolidBrush(RGB(30, 30, 46));
-        HPEN pen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
-        HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
-        HPEN oldPen = (HPEN)SelectObject(hdc, pen);
         RoundRect(hdc, rect.left, rect.top, rect.right, rect.bottom, borderRadius, borderRadius);
-        SelectObject(hdc, oldBrush);
-        SelectObject(hdc, oldPen);
-        DeleteObject(brush);
-        DeleteObject(pen);
         DrawText(hdc, name.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
+    SelectObject(hdc, oldFont);
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(brush);
+    DeleteObject(pen);
 }
 
 void DesktopWindow::DrawCloseButton(HDC hdc) {

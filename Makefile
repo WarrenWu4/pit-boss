@@ -4,6 +4,7 @@ WINFLAGS = -mwindows -municode
 LIBFLAGS = -lsetupapi
 SRC = $(wildcard src/*.cpp)
 BUILD_DIR = build
+RESOURCE_DIR = resources
 EXE = pitboss.exe
 
 # entry point
@@ -13,13 +14,18 @@ all: $(BUILD_DIR) $(EXE)
 $(BUILD_DIR):
 	powershell -Command "if (!(Test-Path '$(BUILD_DIR)')) { New-Item -ItemType Directory -Path '$(BUILD_DIR)' }"
 
+# make a copy of resources in build
+$(BUILD_DIR)/$(RESOURCE_DIR): $(BUILD_DIR)
+	powershell -Command "if (!(Test-Path '$(BUILD_DIR)/$(RESOURCE_DIR)')) { New-Item -ItemType Directory -Path '$(BUILD_DIR)/$(RESOURCE_DIR)' }"
+	powershell -Command "Copy-Item -Path '$(RESOURCE_DIR)/*' -Destination '$(BUILD_DIR)/$(RESOURCE_DIR)' -Recurse -Force"
+
 # ensure that resources are compiled
 $(BUILD_DIR)/app.res:
 	windres app.rc -O coff -o $(BUILD_DIR)/app.res -Iinclude
 
 # just recompile everything
 # don't give a shit anymore
-$(EXE): $(SRC) $(BUILD_DIR)/app.res
+$(EXE): $(SRC) $(BUILD_DIR)/app.res $(BUILD_DIR)/$(RESOURCE_DIR)
 	$(CXX) $(SRC) $(BUILD_DIR)/app.res $(CXXFLAGS) $(WINFLAGS) $(LIBFLAGS) -o $(BUILD_DIR)/$(EXE)
 
 # remove build artifacts

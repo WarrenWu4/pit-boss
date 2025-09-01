@@ -2,3 +2,5 @@
 
 IDI_APP_ICON ICON "resources/logo.ico"
 IDI_CLOSE_ICON ICON "resources/close.ico"
+IDR_FONT1 FONT "resources/JetBrainsMono-Regular.ttf"
+IDR_JBM_FONT_BOLD FONT "resources/JetBrainsMono-Bold.ttf"

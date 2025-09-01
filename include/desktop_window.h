@@ -34,6 +34,9 @@ class DesktopWindow {
         int buttonSize = 32;
         int borderRadius = 8;
         int gap = 8;
+
+        HFONT hFont = nullptr;
+        HANDLE hFontRes = nullptr;
     public:
         DesktopWindow(HINSTANCE hInstance);
         ~DesktopWindow();
