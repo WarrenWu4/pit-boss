@@ -32,6 +32,7 @@ DesktopWindow::DesktopWindow(HINSTANCE hInstance) : hInstance(hInstance) {
 
     desktopNames = { L"Testing", L"testing2" };
     currentDesktopIndex = 0;
+    CalculateLayout(desktopNames);
 }
 
 DesktopWindow::~DesktopWindow() {
@@ -40,21 +41,50 @@ DesktopWindow::~DesktopWindow() {
     }
 }
 
+void DesktopWindow::CalculateLayout(std::vector<std::wstring> desktops) {
+    // set initial container rect to be top left of screen
+    GetClientRect(hwnd, &container);
+    // calculate close rect
+    closeRect = {
+        container.left + containerPadding.x,
+        container.top + containerPadding.y,
+        container.left + containerPadding.x + buttonSize,
+        container.top + containerPadding.y + buttonSize
+    };
+    // calculate desktop rects
+    int currentX = closeRect.right + gap;
+    for (size_t i = 0; i < desktops.size(); i++) {
+        const std::wstring& name = desktops.at(i);
+        SIZE size;
+        HDC hdc = GetDC(hwnd);
+        GetTextExtentPoint32(hdc, name.c_str(), name.length(), &size);
+        RECT desktopRect = {
+            currentX,
+            closeRect.top,
+            currentX + size.cx + 2 * textPadding.x,
+            closeRect.bottom
+        };
+        desktopRects.push_back(desktopRect); 
+        currentX += size.cx + 2 * textPadding.x + gap;
+    }
+    // calculate draggable rect
+    dragRect = {
+        currentX,
+        closeRect.top,
+        currentX + buttonSize,
+        closeRect.bottom
+    };
+    // fit container width to all elements
+    container.right = dragRect.right + containerPadding.x;
+    MoveWindow(hwnd, container.left, container.top, container.right - container.left, container.bottom - container.top, TRUE);
+}
+
 void DesktopWindow::DrawContainer(HDC hdc) {
-    RECT parent;
-    GetClientRect(hwnd, &parent);
-    // RECT rect = {
-    //     parent.left,
-    //     parent.top,
-    //     dragRect.right+containerPadding.x,
-    //     parent.bottom
-    // };
-    RECT rect = parent;
     HBRUSH brush = CreateSolidBrush(RGB(24, 24, 37));
     HPEN hPen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, hPen);
-    RoundRect(hdc, rect.left, rect.top, rect.right, rect.bottom, 8, 8);
+    RoundRect(hdc, container.left, container.top, container.right, container.bottom, borderRadius, borderRadius);
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
     DeleteObject(brush);
@@ -62,48 +92,27 @@ void DesktopWindow::DrawContainer(HDC hdc) {
 }
 
 void DesktopWindow::DrawDesktopNames(HDC hdc) {
-    // grab position of parent and calculate next child position
-    RECT parent;
-    GetClientRect(hwnd, &parent);
-    int rectX = closeRect.right + gap;
-    int rectY = closeRect.top;
-
     // set text parameters
     SetTextColor(hdc, RGB(135, 141, 164));
     SetBkMode(hdc, TRANSPARENT);
-
     // iterate through desktop names and draw each
-    for (size_t i = 0; i < desktopNames.size(); i++) {
+    for (size_t i = 0; i < desktopRects.size(); i++) {
         const std::wstring& name = desktopNames[i];
-        SIZE size;
-        GetTextExtentPoint32(hdc, name.c_str(), name.length(), &size);
-        RECT textRect = { rectX, rectY, rectX+size.cx+2*textPadding.x, closeRect.bottom };
+        RECT rect = desktopRects[i];
         HBRUSH brush = CreateSolidBrush(RGB(30, 30, 46));
         HPEN pen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
         HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
         HPEN oldPen = (HPEN)SelectObject(hdc, pen);
-        RoundRect(hdc, textRect.left, textRect.top, textRect.right, textRect.bottom, borderRadius, borderRadius);
+        RoundRect(hdc, rect.left, rect.top, rect.right, rect.bottom, borderRadius, borderRadius);
         SelectObject(hdc, oldBrush);
         SelectObject(hdc, oldPen);
         DeleteObject(brush);
         DeleteObject(pen);
-        DrawText(hdc, name.c_str(), -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-        rectX = textRect.right + gap;
+        DrawText(hdc, name.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
-    finalDesktopRect = {rectX, rectY, rectX, rectY };
 }
 
 void DesktopWindow::DrawCloseButton(HDC hdc) {
-    // calculate position relative to parent
-    RECT parent;
-    GetClientRect(hwnd, &parent);
-    int rectX = parent.left+containerPadding.x;
-    int rectY = parent.top+containerPadding.y;
-
-    // create and draw new rect
-    int rectWidth = 32;
-    int rectHeight = 32;
-    closeRect = {rectX, rectY, rectX+rectWidth, rectY+rectHeight};
     HBRUSH brush = CreateSolidBrush(RGB(30, 30, 46));
     HPEN pen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
@@ -113,23 +122,9 @@ void DesktopWindow::DrawCloseButton(HDC hdc) {
     SelectObject(hdc, oldPen);
     DeleteObject(brush);
     DeleteObject(pen);
-
-    // create and draw close icon
-    HICON closeIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CLOSE_ICON));
-    int iconWidth = 16;
-    int iconHeight = 16;
-    int iconX = rectX+(rectWidth-iconWidth)/2;
-    int iconY = rectY+(rectHeight-iconHeight)/2;
-    DrawIcon(hdc, iconX, iconY, closeIcon);
 }
 
 void DesktopWindow::DrawDraggableButton(HDC hdc) {
-    RECT parent;
-    GetClientRect(hwnd, &parent);
-    int rectX = finalDesktopRect.right;
-    int rectY = parent.top+containerPadding.y;
-    int rectWidth = 32;
-    dragRect = {rectX, rectY, rectX+rectWidth, rectY+rectWidth};
     HBRUSH brush = CreateSolidBrush(RGB(30, 30, 46));
     HPEN pen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);

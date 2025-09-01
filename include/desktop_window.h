@@ -15,6 +15,7 @@ class DesktopWindow {
         HWND hwnd = nullptr;
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+        void CalculateLayout(std::vector<std::wstring> desktops);
         void DrawContainer(HDC hdc);
         void DrawCloseButton(HDC hdc);
         void DrawDesktopNames(HDC hdc);
@@ -23,11 +24,14 @@ class DesktopWindow {
         std::vector<std::wstring> desktopNames;
         int currentDesktopIndex;
 
+        RECT container = {};
         RECT closeRect = {};
-        RECT finalDesktopRect = {};
         RECT dragRect = {};
+        std::vector<RECT> desktopRects;
+
         Point containerPadding = {10, 8};
         Point textPadding = {8, 4};
+        int buttonSize = 32;
         int borderRadius = 8;
         int gap = 8;
     public:
