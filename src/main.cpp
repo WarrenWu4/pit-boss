@@ -28,6 +28,10 @@ HHOOK g_hHook = NULL;
 void cleanup() {
     UnhookWindowsHookEx(g_hHook);
     PostQuitMessage(0);
+    if (desktopManager) {
+        delete desktopManager;
+        desktopManager = nullptr;
+    }
     if (iconManager) {
         delete iconManager;
         iconManager = nullptr;
