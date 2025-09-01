@@ -13,10 +13,14 @@ all: $(BUILD_DIR) $(EXE)
 $(BUILD_DIR):
 	powershell -Command "if (!(Test-Path '$(BUILD_DIR)')) { New-Item -ItemType Directory -Path '$(BUILD_DIR)' }"
 
+# ensure that resources are compiled
+$(BUILD_DIR)/app.res:
+	windres app.rc -O coff -o $(BUILD_DIR)/app.res -Iinclude
+
 # just recompile everything
 # don't give a shit anymore
-$(EXE): $(SRC)
-	$(CXX) $(SRC) $(CXXFLAGS) $(WINFLAGS) $(LIBFLAGS) -o $(BUILD_DIR)/$(EXE)
+$(EXE): $(SRC) $(BUILD_DIR)/app.res
+	$(CXX) $(SRC) $(BUILD_DIR)/app.res $(CXXFLAGS) $(WINFLAGS) $(LIBFLAGS) -o $(BUILD_DIR)/$(EXE)
 
 # remove build artifacts
 clean:
