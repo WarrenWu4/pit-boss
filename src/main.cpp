@@ -2,12 +2,14 @@
 #define UNICODE
 #endif
 
-#include "desktop_manager.h"
-#include "logger.h"
-#include "settings_window.h"
 #include <iostream>
 #include <windows.h>
 #include <cassert>
+
+#include "desktop_manager.h"
+#include "logger.h"
+#include "settings_window.h"
+#include "resource.h"
 
 #define WM_TRAYICON (WM_USER + 1)
 #define ID_TRAY_SETTINGS 1002
@@ -131,7 +133,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     nid.uID = 1;
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_TRAYICON;
-    hIcon = (HICON)LoadImage(NULL, L"../resources/logo.ico", IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
+    hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
     if (hIcon) {
         nid.hIcon = hIcon;
     } else {
