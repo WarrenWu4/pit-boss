@@ -40,4 +40,6 @@ class DesktopWindow {
     public:
         DesktopWindow(HINSTANCE hInstance);
         ~DesktopWindow();
+        void setDesktopNames(std::vector<std::wstring> names);
+        void setCurrentDesktopIndex(int index);
 };

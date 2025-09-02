@@ -51,6 +51,7 @@ void hotKeyHandler(int number) {
     assert(number >= 0 && number < 9);
     assert(desktopManager && desktopManager->isLoaded());
     desktopManager->switchToDesktop(number);
+    desktopWindow->setCurrentDesktopIndex(number);
 }
 
 LRESULT CALLBACK ShortcutProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -137,11 +138,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     // this way it will save both time and memory
     settingsWindow = new SettingsWindow(hInstance);
     desktopWindow = new DesktopWindow(hInstance);
+    desktopManager = new DesktopManager();
     // make sure desktop manager functions are loaded
-    if (desktopManager && desktopManager->isLoaded()) {
+    if (desktopManager == nullptr || !desktopManager->isLoaded()) {
         errorLog.LogMessageToFile(L"Failed to load VirtualDesktopAccessor.dll");
         return 1;
     }
+    int current = desktopManager->getCurrentDesktop();
+    int desktops = desktopManager->getDesktopCount();
+    std::vector<std::wstring> names;
+    for (int i = 0; i < desktops; i++) {
+        names.push_back(std::to_wstring(i + 1));
+    }
+    desktopWindow->setDesktopNames(names);
+    desktopWindow->setCurrentDesktopIndex(current);
 
     // msg loop
     MSG msg = { };

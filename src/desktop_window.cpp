@@ -47,10 +47,7 @@ DesktopWindow::DesktopWindow(HINSTANCE hInstance) : hInstance(hInstance) {
         DEFAULT_PITCH | FF_MODERN, L"JetBrains Mono"
     );
 
-    desktopNames = { L"dummy thic", L"yayayay" };
-    for (size_t i = 0; i < desktopNames.size(); i++) {
-        desktopNames[i] = std::to_wstring(i + 1) + L"." + desktopNames[i];
-    }
+    desktopNames = {};
     currentDesktopIndex = 0;
     CalculateLayout(desktopNames);
 }
@@ -123,8 +120,6 @@ void DesktopWindow::DrawContainer(HDC hdc) {
 }
 
 void DesktopWindow::DrawDesktopNames(HDC hdc) {
-    // set text parameters
-    SetTextColor(hdc, RGB(135, 141, 164));
     SetBkMode(hdc, TRANSPARENT);
     HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
     HBRUSH brush = CreateSolidBrush(RGB(30, 30, 46));
@@ -196,6 +191,7 @@ LRESULT CALLBACK DesktopWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
+            FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW+1));
             pThis->DrawContainer(hdc);
             pThis->DrawCloseButton(hdc);
             pThis->DrawDesktopNames(hdc);
@@ -208,4 +204,18 @@ LRESULT CALLBACK DesktopWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
             return 0;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+void DesktopWindow::setDesktopNames(std::vector<std::wstring> names) {
+    desktopNames.clear();
+    for (size_t i = 0; i < names.size(); i++) {
+        // desktopNames.push_back(std::to_wstring(i + 1) + L"." + desktopNames[i]);
+        desktopNames.push_back(names[i]);
+    }
+    CalculateLayout(desktopNames);
+    UpdateWindow(hwnd);
+}
+
+void DesktopWindow::setCurrentDesktopIndex(int index) {
+    currentDesktopIndex = index;
 }
