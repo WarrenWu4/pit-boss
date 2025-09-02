@@ -109,23 +109,24 @@ void DesktopWindow::CalculateLayout(std::vector<std::wstring> desktops) {
 
 void DesktopWindow::DrawContainer(HDC hdc) {
     HBRUSH brush = CreateSolidBrush(RGB(24, 24, 37));
-    HPEN hPen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
+    HPEN pen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
-    HPEN oldPen = (HPEN)SelectObject(hdc, hPen);
+    HPEN oldPen = (HPEN)SelectObject(hdc, pen);
     RoundRect(hdc, container.left, container.top, container.right, container.bottom, borderRadius, borderRadius);
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
     DeleteObject(brush);
-    DeleteObject(hPen);
+    DeleteObject(pen);
 }
 
 void DesktopWindow::DrawDesktopNames(HDC hdc) {
     SetBkMode(hdc, TRANSPARENT);
-    HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
     HBRUSH brush = CreateSolidBrush(RGB(30, 30, 46));
+    SetTextColor(hdc, RGB(135, 141, 164));
     HPEN pen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
+    HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
     // iterate through desktop names and draw each
     for (size_t i = 0; i < desktopRects.size(); i++) {
         const std::wstring& name = desktopNames[i];
@@ -189,9 +190,9 @@ LRESULT CALLBACK DesktopWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
             break;
         }
         case WM_PAINT: {
+            InvalidateRect(hwnd, NULL, TRUE);
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW+1));
             pThis->DrawContainer(hdc);
             pThis->DrawCloseButton(hdc);
             pThis->DrawDesktopNames(hdc);
