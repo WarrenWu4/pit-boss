@@ -3,6 +3,7 @@ CXXFLAGS = -Wall -std=c++17 -Iinclude
 WINFLAGS = -mwindows -municode
 LIBFLAGS = -lsetupapi
 SRC = $(wildcard src/*.cpp)
+OBJ = $(patsubst src/%.cpp, $(BUILD_DIR)/%.o, $(SRC))
 BUILD_DIR = build
 RESOURCE_DIR = resources
 EXE = pitboss.exe
@@ -23,10 +24,13 @@ $(BUILD_DIR)/$(RESOURCE_DIR): $(BUILD_DIR)
 $(BUILD_DIR)/app.res:
 	windres app.rc -O coff -o $(BUILD_DIR)/app.res -Iinclude
 
-# just recompile everything
-# don't give a shit anymore
-$(EXE): $(SRC) $(BUILD_DIR)/app.res $(BUILD_DIR)/$(RESOURCE_DIR)
-	$(CXX) $(SRC) $(BUILD_DIR)/app.res $(CXXFLAGS) $(WINFLAGS) $(LIBFLAGS) -o $(BUILD_DIR)/$(EXE)
+# compile each source file to object file
+$(BUILD_DIR)/%.o: src/%.cpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(WINFLAGS) -c $< -o $@
+
+# link object files into executable
+$(EXE): $(OBJ) $(BUILD_DIR)/app.res $(BUILD_DIR)/$(RESOURCE_DIR)
+	$(CXX) $(OBJ) $(BUILD_DIR)/app.res $(CXXFLAGS) $(WINFLAGS) $(LIBFLAGS) -o $(BUILD_DIR)/$(EXE)
 
 # remove build artifacts
 clean:
