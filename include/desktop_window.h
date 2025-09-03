@@ -1,8 +1,12 @@
 // display virtual desktop information
+#pragma once
+
 #include "resource.h"
 #include <windows.h>
 #include <vector>
 #include <string>
+
+#include "logger.h"
 
 struct Point {
     int x;
@@ -11,6 +15,7 @@ struct Point {
 
 class DesktopWindow {
     private:
+        Logger log = Logger(L"build/error.log");
         HINSTANCE hInstance;
         HWND hwnd = nullptr;
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
