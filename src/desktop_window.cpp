@@ -154,6 +154,15 @@ void DesktopWindow::DrawCloseButton(HDC hdc) {
     SelectObject(hdc, oldPen);
     DeleteObject(brush);
     DeleteObject(pen);
+    HICON hIcon = (HICON)LoadImage(
+        hInstance,
+        MAKEINTRESOURCE(IDI_CLOSE_ICON),
+        IMAGE_ICON,
+        16,
+        16,
+        LR_DEFAULTCOLOR
+    );
+    DrawIconEx(hdc, closeRect.left + (buttonSize - 16) / 2, closeRect.top + (buttonSize - 16) / 2, hIcon, 16, 16, 0, NULL, DI_NORMAL);
 }
 
 void DesktopWindow::DrawDraggableButton(HDC hdc) {
@@ -166,6 +175,15 @@ void DesktopWindow::DrawDraggableButton(HDC hdc) {
     SelectObject(hdc, oldPen);
     DeleteObject(brush);
     DeleteObject(pen);
+    HICON hIcon = (HICON)LoadImage(
+        hInstance,
+        MAKEINTRESOURCE(IDI_DRAG_ICON),
+        IMAGE_ICON,
+        16,
+        16,
+        LR_DEFAULTCOLOR
+    );
+    DrawIconEx(hdc, dragRect.left + (buttonSize - 16) / 2, dragRect.top + (buttonSize - 16) / 2, hIcon, 16, 16, 0, NULL, DI_NORMAL);
 }
 
 LRESULT CALLBACK DesktopWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
