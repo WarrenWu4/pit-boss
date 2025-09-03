@@ -16,6 +16,8 @@
 
 #define WM_TRAYICON (WM_USER + 1)
 #define WM_SWITCH_DESKTOP (WM_USER + 2)
+#define WM_SWITCH_DESKTOP_LEFT (WM_USER+3)
+#define WM_SWITCH_DESKTOP_RIGHT (WM_USER+4)
 #define ID_TRAY_SETTINGS 1002
 #define ID_TRAY_EXIT 1001
 
@@ -64,9 +66,9 @@ void hotKeyHandler(int number) {
         log.LogMessageToFile(L"Invalid desktop number: " + std::to_wstring(number));
         return;
     }
+    desktopWindow->setCurrentDesktopIndex(number);
     int result = desktopManager->switchToDesktop(number);
     log.LogMessageToFile(std::to_wstring(result));
-    // desktopWindow->setCurrentDesktopIndex(number);
 }
 
 LRESULT CALLBACK ShortcutProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -85,15 +87,38 @@ LRESULT CALLBACK ShortcutProc(int nCode, WPARAM wParam, LPARAM lParam)
             // suppress the original windows behavior
             return 1;
         }
+        bool ctrlPressed = (GetAsyncKeyState(VK_CONTROL) & 0x8000);
+        if (winPressed && ctrlPressed) {
+            if (vk == VK_LEFT) { PostMessage(hwnd, WM_SWITCH_DESKTOP_LEFT, 0, 0); return 1; }
+            if (vk == VK_RIGHT) { PostMessage(hwnd, WM_SWITCH_DESKTOP_RIGHT, 0, 0); return 1; }
+        }
     }
     return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    log.LogMessageToFile(L"WindowProc called with message: " + std::to_wstring(uMsg));
     switch (uMsg) {
         case WM_SWITCH_DESKTOP: {
             log.LogMessageToFile(L"Switching to desktop: " + std::to_wstring((int)wParam));
             desktopManager->switchToDesktop((int)wParam);
+            desktopWindow->setCurrentDesktopIndex((int)wParam);
+            return 0;
+        }
+        case WM_SWITCH_DESKTOP_LEFT: {
+            int prev = desktopManager->getCurrentDesktop()-1;
+            if (prev >= 0 && prev <= 9) {
+                desktopManager->switchToDesktop(prev);
+                desktopWindow->setCurrentDesktopIndex(prev);
+            }
+            return 0;
+        }
+        case WM_SWITCH_DESKTOP_RIGHT: {
+            int next = desktopManager->getCurrentDesktop()+1;
+            if (next >= 0 && next <= 9) {
+                desktopManager->switchToDesktop(next);
+                desktopWindow->setCurrentDesktopIndex(next);
+            }
             return 0;
         }
         case WM_TRAYICON: {
