@@ -222,6 +222,7 @@ void DesktopWindow::setDesktopNames(std::vector<std::wstring> names) {
 }
 
 void DesktopWindow::setCurrentDesktopIndex(int index) {
+    // TODO: can optimize this more by only invalidating the affected areas
     currentDesktopIndex = index;
     RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE);
 }
