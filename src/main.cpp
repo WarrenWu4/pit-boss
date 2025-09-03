@@ -152,6 +152,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     }
     desktopWindow->setDesktopNames(names);
     desktopWindow->setCurrentDesktopIndex(current);
+    errorLog.LogMessageToFile(L"Current desktop: " + std::to_wstring(current) + L", Total desktops: " + std::to_wstring(desktops));
 
     // msg loop
     MSG msg = { };

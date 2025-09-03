@@ -120,15 +120,18 @@ void DesktopWindow::DrawContainer(HDC hdc) {
 }
 
 void DesktopWindow::DrawDesktopNames(HDC hdc) {
-    SetBkMode(hdc, TRANSPARENT);
-    HBRUSH brush = CreateSolidBrush(RGB(30, 30, 46));
-    SetTextColor(hdc, RGB(135, 141, 164));
+    HBRUSH inactiveBrush = CreateSolidBrush(RGB(30, 30, 46));
+    HBRUSH activeBrush = CreateSolidBrush(RGB(205, 214, 244));
     HPEN pen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
-    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, inactiveBrush);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
     HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
+    SetBkMode(hdc, TRANSPARENT);
     // iterate through desktop names and draw each
     for (size_t i = 0; i < desktopRects.size(); i++) {
+        log.LogMessageToFile(L"Drawing desktop: " + std::to_wstring(i) + L" " + std::to_wstring(currentDesktopIndex));
+        SetTextColor(hdc, ((int)i == currentDesktopIndex) ? RGB(30, 30, 46) : RGB(135, 141, 164));
+        SelectObject(hdc, ((int)i == currentDesktopIndex) ? activeBrush : inactiveBrush);
         const std::wstring& name = desktopNames[i];
         RECT rect = desktopRects[i];
         RoundRect(hdc, rect.left, rect.top, rect.right, rect.bottom, borderRadius, borderRadius);
@@ -137,7 +140,8 @@ void DesktopWindow::DrawDesktopNames(HDC hdc) {
     SelectObject(hdc, oldFont);
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
-    DeleteObject(brush);
+    DeleteObject(inactiveBrush);
+    DeleteObject(activeBrush);
     DeleteObject(pen);
 }
 
@@ -214,9 +218,11 @@ void DesktopWindow::setDesktopNames(std::vector<std::wstring> names) {
         desktopNames.push_back(names[i]);
     }
     CalculateLayout(desktopNames);
-    UpdateWindow(hwnd);
+    RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE);
 }
 
 void DesktopWindow::setCurrentDesktopIndex(int index) {
+    // TODO: can optimize this more by only invalidating the affected areas
     currentDesktopIndex = index;
+    RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE);
 }
