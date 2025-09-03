@@ -148,11 +148,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     int desktops = desktopManager->getDesktopCount();
     std::vector<std::wstring> names;
     for (int i = 0; i < desktops; i++) {
-        names.push_back(std::to_wstring(i + 1));
+        std::wstring name = L"";
+        if (desktopManager->getDesktopName(i, name, 50) > 0) {
+            names.push_back(name);
+        } else {
+            names.push_back(std::to_wstring(i+1));
+        }
     }
     desktopWindow->setDesktopNames(names);
     desktopWindow->setCurrentDesktopIndex(current);
-    errorLog.LogMessageToFile(L"Current desktop: " + std::to_wstring(current) + L", Total desktops: " + std::to_wstring(desktops));
 
     // msg loop
     MSG msg = { };

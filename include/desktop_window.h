@@ -6,8 +6,6 @@
 #include <vector>
 #include <string>
 
-#include "logger.h"
-
 struct Point {
     int x;
     int y;
@@ -15,7 +13,6 @@ struct Point {
 
 class DesktopWindow {
     private:
-        Logger log = Logger(L"build/error.log");
         HINSTANCE hInstance;
         HWND hwnd = nullptr;
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

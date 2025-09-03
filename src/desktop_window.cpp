@@ -129,7 +129,6 @@ void DesktopWindow::DrawDesktopNames(HDC hdc) {
     SetBkMode(hdc, TRANSPARENT);
     // iterate through desktop names and draw each
     for (size_t i = 0; i < desktopRects.size(); i++) {
-        log.LogMessageToFile(L"Drawing desktop: " + std::to_wstring(i) + L" " + std::to_wstring(currentDesktopIndex));
         SetTextColor(hdc, ((int)i == currentDesktopIndex) ? RGB(30, 30, 46) : RGB(135, 141, 164));
         SelectObject(hdc, ((int)i == currentDesktopIndex) ? activeBrush : inactiveBrush);
         const std::wstring& name = desktopNames[i];
