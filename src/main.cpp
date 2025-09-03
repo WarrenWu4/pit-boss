@@ -10,36 +10,48 @@
 #include "logger.h"
 #include "settings_window.h"
 #include "resource.h"
+#include "icon_manager.h"
+#include "desktop_window.h"
 
 #define WM_TRAYICON (WM_USER + 1)
 #define ID_TRAY_SETTINGS 1002
 #define ID_TRAY_EXIT 1001
-NOTIFYICONDATA nid = {};
-HMENU hTrayMenu = NULL;
+
+IconManager* iconManager = nullptr;
 SettingsWindow* settingsWindow = nullptr;
-HICON hIcon = NULL;
+DesktopWindow* desktopWindow = nullptr;
+DesktopManager* desktopManager = nullptr;
+Logger errorLog(L"build/error.log");
 
 HHOOK g_hHook = NULL;
-DesktopManager desktopManager;
-Logger errorLog(L"build/error.log");
 
 void cleanup() {
     UnhookWindowsHookEx(g_hHook);
-    Shell_NotifyIcon(NIM_DELETE, &nid);
-    DestroyMenu(hTrayMenu);
-    DestroyIcon(hIcon);
     PostQuitMessage(0);
+    if (desktopManager) {
+        delete desktopManager;
+        desktopManager = nullptr;
+    }
+    if (iconManager) {
+        delete iconManager;
+        iconManager = nullptr;
+    }
     if (settingsWindow) {
         delete settingsWindow;
         settingsWindow = nullptr;
+    }
+    if (desktopWindow) {
+        delete desktopWindow;
+        desktopWindow = nullptr;
     }
 }
 
 void hotKeyHandler(int number) {
     errorLog.LogMessageToFile(L"Hotkey pressed: " + std::to_wstring(number));
     assert(number >= 0 && number < 9);
-    assert(desktopManager.isLoaded());
-    desktopManager.switchToDesktop(number);
+    assert(desktopManager && desktopManager->isLoaded());
+    desktopManager->switchToDesktop(number);
+    desktopWindow->setCurrentDesktopIndex(number);
 }
 
 LRESULT CALLBACK ShortcutProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -68,7 +80,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 POINT pt;
                 GetCursorPos(&pt);
                 SetForegroundWindow(hwnd);
-                TrackPopupMenu(hTrayMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, pt.x, pt.y, 0, hwnd, NULL);
+                TrackPopupMenu(iconManager->hTrayMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, pt.x, pt.y, 0, hwnd, NULL);
             }
             return 0;
         }
@@ -93,16 +105,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
-    // TODO: change the timing for when settings window is created
-    // create settings window when the settings button is clicked
-    // this way it will save both time and memory
-    settingsWindow = new SettingsWindow(hInstance);
-    // make sure desktop manager functions are loaded
-    if (!desktopManager.isLoaded()) {
-        errorLog.LogMessageToFile(L"Failed to load VirtualDesktopAccessor.dll");
-        return 1;
-    }
-
     // install low-level keyboard hook
     g_hHook = SetWindowsHookEx(WH_KEYBOARD_LL, ShortcutProc, GetModuleHandle(NULL), 0);
     if (!g_hHook) {
@@ -128,22 +130,28 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     }
 
     // adding system tray
-    nid.cbSize = sizeof(NOTIFYICONDATA);
-    nid.hWnd = hwnd;
-    nid.uID = 1;
-    nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-    nid.uCallbackMessage = WM_TRAYICON;
-    hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
-    if (hIcon) {
-        nid.hIcon = hIcon;
-    } else {
-        nid.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    iconManager = new IconManager(hInstance, hwnd);
+    iconManager->InitTray();
+
+    // TODO: change the timing for when settings window is created
+    // create settings window when the settings button is clicked
+    // this way it will save both time and memory
+    settingsWindow = new SettingsWindow(hInstance);
+    desktopWindow = new DesktopWindow(hInstance);
+    desktopManager = new DesktopManager();
+    // make sure desktop manager functions are loaded
+    if (desktopManager == nullptr || !desktopManager->isLoaded()) {
+        errorLog.LogMessageToFile(L"Failed to load VirtualDesktopAccessor.dll");
+        return 1;
     }
-    wcscpy_s(nid.szTip, L"Pit Boss");
-    Shell_NotifyIcon(NIM_ADD, &nid);
-    hTrayMenu = CreatePopupMenu();
-    AppendMenu(hTrayMenu, MF_STRING, ID_TRAY_SETTINGS, L"Settings");
-    AppendMenu(hTrayMenu, MF_STRING, ID_TRAY_EXIT, L"Exit");
+    int current = desktopManager->getCurrentDesktop();
+    int desktops = desktopManager->getDesktopCount();
+    std::vector<std::wstring> names;
+    for (int i = 0; i < desktops; i++) {
+        names.push_back(std::to_wstring(i + 1));
+    }
+    desktopWindow->setDesktopNames(names);
+    desktopWindow->setCurrentDesktopIndex(current);
 
     // msg loop
     MSG msg = { };
