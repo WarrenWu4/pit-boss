@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -Wall -std=c++17 -Iinclude
 WINFLAGS = -mwindows -municode
-LIBFLAGS = -lsetupapi
+LIBFLAGS = -lsetupapi -lole32 -lgdi32
 SRC = $(wildcard src/*.cpp)
 OBJ = $(patsubst src/%.cpp, $(BUILD_DIR)/%.o, $(SRC))
 BUILD_DIR = build

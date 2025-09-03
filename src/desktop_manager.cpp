@@ -53,8 +53,18 @@ int DesktopManager::getCurrentDesktop() const {
 }
 
 int DesktopManager::switchToDesktop(int index) const {
-    if (!loaded) return -1;
-    return GoToDesktopNumber(index);
+    if (!loaded) { return -2; }
+    int result = GoToDesktopNumber(index);
+    if (result == -1)
+    {
+        // Check GetLastError, even though the DLL doesn’t always set it
+        DWORD err = GetLastError();
+        wchar_t buf[512];
+        FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                       NULL, err, 0, buf, (sizeof(buf) / sizeof(wchar_t)), NULL);
+        MessageBoxW(NULL, buf, L"GoToDesktopNumber failed", MB_OK | MB_ICONERROR);
+    }
+    return result;
 }
 
 int DesktopManager::getDesktopName(int index, std::wstring& name, int maxLength) const {

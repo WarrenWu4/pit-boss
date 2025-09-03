@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "logger.h"
 
 class DesktopManager {
 public:
@@ -14,6 +15,7 @@ public:
     int getDesktopName(int index, std::wstring& name, int maxLength) const;
 
 private:
+    Logger log = Logger(L"build/error.log");
     void loadFunctions();
 
     void* hDll;
